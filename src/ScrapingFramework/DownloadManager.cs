@@ -1,5 +1,6 @@
 ﻿using ScrapingFramework.Interfaces;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ScrapingFramework
@@ -14,14 +15,16 @@ namespace ScrapingFramework
             _cachingProvider = cachingProvider;
         }
 
-        public async Task<string> Download(string url)
+        public async Task<string> Download(string url, Encoding websiteEncoding)
         {
             if (await _cachingProvider.HasKey(url))
             {
                 return await _cachingProvider.GetValue(url);
             }
 
-            var html = await _httpClient.GetStringAsync(url);
+            var responseBytes = await _httpClient.GetByteArrayAsync(url);
+            var html = websiteEncoding.GetString(responseBytes);
+
             await _cachingProvider.CacheItem(url, html);
             return html;
         }

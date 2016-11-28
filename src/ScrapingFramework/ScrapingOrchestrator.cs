@@ -103,7 +103,7 @@ namespace ScrapingFramework
                     {
                         ScrapingOrchestrator = this,
                         Url = urlToScrape,
-                        Html = await _downloadManager.Download(urlToScrape)
+                        Html = await _downloadManager.Download(urlToScrape, scraper.WebsiteEncoding)
                     });
 
                     await SaveScrapingResult(scrapingResult);
