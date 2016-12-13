@@ -1,5 +1,6 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Parser.Html;
+using System.Text.RegularExpressions;
 
 namespace ScrapingFramework
 {
@@ -13,6 +14,14 @@ namespace ScrapingFramework
         public static IDocument Parse(string html)
         {
             return _htmlParser.Parse(html);
+        }
+
+        /// <summary>
+        /// Trim whitespace at beginning, end and middle (multiple consecutive spaces) of a string.
+        /// </summary>
+        public static string TrimAll(string input)
+        {
+            return Regex.Replace(input, @"\s+", " ").Trim();
         }
     }
 }
