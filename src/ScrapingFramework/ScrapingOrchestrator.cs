@@ -52,7 +52,6 @@ namespace ScrapingFramework
                 await Task.Run(HandleQueue);
             }
 
-
             _logger.LogInformation("Orchestrator finished");
         }
 
@@ -116,6 +115,7 @@ namespace ScrapingFramework
             // No more work for now, wait a bit and retry
             System.Threading.Thread.Sleep(_millisecondsBetweenRetries);
             _retryCount++;
+            _logger.LogTrace($"retyCount={_retryCount}");
         }
 
         private bool CanContinue()
