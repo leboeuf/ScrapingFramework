@@ -8,5 +8,10 @@ namespace ScrapingFramework.ScrapingObjects
 
         public Type ResultObjectType { get; set; }
         public object ResultObject { get; set; }
+
+        /// <summary>
+        /// Null if success, Exception if failure.
+        /// </summary>
+        public Exception Exception { get; set; }
     }
 }

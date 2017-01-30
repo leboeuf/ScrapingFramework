@@ -31,6 +31,14 @@ namespace ScrapingFramework
         /// </summary>
         public List<IScraper> Scrapers { get; set; }
 
+        public IDownloadManager DownloadManager
+        {
+            get
+            {
+                return _downloadManager;
+            }
+        }
+
         // The orchestrator will stop when nothing has happened for [_maxRetryCount * _millisecondsBetweenRetries] ms (no new task, no new item in the queue).
         private int _retryCount = 0;
         private int _maxRetryCount = 50;
@@ -104,6 +112,18 @@ namespace ScrapingFramework
                         Url = urlToScrape,
                         Html = await _downloadManager.Download(urlToScrape, scraper.WebsiteEncoding)
                     });
+
+                    if (scrapingResult == null)
+                    {
+                        // No response to handle (scraper doesn't return a ScrapingResult)
+                        return;
+                    }
+
+                    if (scrapingResult.Exception != null)
+                    {
+                        _logger.LogError(null, scrapingResult.Exception);
+                        return;
+                    }
 
                     await SaveScrapingResult(scrapingResult);
                 });
