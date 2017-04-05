@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ScrapingFramework.Interfaces
@@ -27,8 +28,8 @@ namespace ScrapingFramework.Interfaces
         void RegisterPersister(Type scrapedObjectType, Type persister);
 
         /// <summary>
-        /// Add an URL to the scraping queue.
+        /// Add an URL to the scraping queue (with optional metadata).
         /// </summary>
-        void AddUrlToQueue(string url);
+        void AddUrlToQueue(string url, Dictionary<string, string> metadata = null);
     }
 }

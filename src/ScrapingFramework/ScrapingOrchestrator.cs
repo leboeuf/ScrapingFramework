@@ -21,7 +21,7 @@ namespace ScrapingFramework
         private Dictionary<Type, Type> _persisters = new Dictionary<Type, Type>(); // Referenced type must implmement IScrapedObjectPersister
 
         // The list of URLs to scrape
-        private ConcurrentQueue<string> _scrapingQueue = new ConcurrentQueue<string>();
+        private ConcurrentQueue<ScrapingRequest> _scrapingQueue = new ConcurrentQueue<ScrapingRequest>();
 
         // The list of scraping tasks in progress
         private List<Task> _scrapingTasks = new List<Task>();
@@ -73,9 +73,9 @@ namespace ScrapingFramework
             _persisters.Add(scrapedObjectType, persister);
         }
 
-        public void AddUrlToQueue(string url)
+        public void AddUrlToQueue(string url, Dictionary<string, string> metadata = null)
         {
-            _scrapingQueue.Enqueue(url);
+            _scrapingQueue.Enqueue(new ScrapingRequest { Url = url, Metadata = metadata });
         }
 
         private async Task HandleQueue()
@@ -83,19 +83,19 @@ namespace ScrapingFramework
             while (CanContinue())
             {
                 _retryCount = 0;
-                string urlToScrape;
-                if (!_scrapingQueue.TryDequeue(out urlToScrape) || urlToScrape == null)
+                ScrapingRequest scrapingRequest;
+                if (!_scrapingQueue.TryDequeue(out scrapingRequest) || scrapingRequest == null)
                 {
                     // Queue is empty
                     continue;
                 }
 
                 // Find appropriate scraper
-                var scraperType = _scrapers.FirstOrDefault(s => urlToScrape.StartsWith(s.Key)).Value;
+                var scraperType = _scrapers.FirstOrDefault(s => scrapingRequest.Url.StartsWith(s.Key)).Value;
                 if (scraperType == null)
                 {
                     // No scraper for this URL, add to list of URLs not scraped
-                    _logger.LogWarning($"No scraper found for URL {urlToScrape}");
+                    _logger.LogWarning($"No scraper found for URL {scrapingRequest.Url}");
                     continue;
                 }
 
@@ -103,14 +103,14 @@ namespace ScrapingFramework
                 var scraper = (IScraper)Activator.CreateInstance(scraperType);
 
                 // Start scraping of URL
-                _logger.LogInformation($"Scraping {urlToScrape}");
+                _logger.LogInformation($"Scraping {scrapingRequest.Url}");
                 var scrapingTask = new Task(async () =>
                 {
                     var scrapingResult = await scraper.Scrape(new ScrapingContext
                     {
                         ScrapingOrchestrator = this,
-                        Url = urlToScrape,
-                        Html = await _downloadManager.Download(urlToScrape, scraper.WebsiteEncoding)
+                        ScrapingRequest = scrapingRequest,
+                        Html = await _downloadManager.Download(scrapingRequest.Url, scraper.WebsiteEncoding)
                     });
 
                     if (scrapingResult == null)
@@ -121,7 +121,7 @@ namespace ScrapingFramework
 
                     if (scrapingResult.Exception != null)
                     {
-                        _logger.LogError(null, scrapingResult.Exception);
+                        _logger.LogError(scrapingResult.Exception.Message, scrapingResult.Exception);
                         return;
                     }
 
