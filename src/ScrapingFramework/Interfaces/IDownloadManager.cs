@@ -9,5 +9,6 @@ namespace ScrapingFramework.Interfaces
         /// Download an URL and return its body. Implementation may use caching via ICachingPovider.
         /// </summary>
         Task<string> Download(string url, Encoding websiteEncoding);
+        Task<string> DownloadImageToBase64(string imageUrl);
     }
 }
