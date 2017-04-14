@@ -15,9 +15,10 @@ namespace ScrapingFramework
     /// </summary>
     public class ScrapingOrchestrator : IScrapingOrchestrator
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ScrapingOrchestrator> _logger;
         private readonly IDownloadManager _downloadManager;
-        private Dictionary<string, Type> _scrapers = new Dictionary<string, Type>(); // Referenced type must implmement IScraper
+        private readonly IScraperFactory _scraperFactory;
         private Dictionary<Type, Type> _persisters = new Dictionary<Type, Type>(); // Referenced type must implmement IScrapedObjectPersister
 
         // The list of URLs to scrape
@@ -36,6 +37,14 @@ namespace ScrapingFramework
             get
             {
                 return _downloadManager;
+            }
+        }
+
+        public ILogger<ScrapingOrchestrator> Logger
+        {
+            get
+            {
+                return _logger;
             }
         }
 
@@ -63,11 +72,6 @@ namespace ScrapingFramework
             _logger.LogInformation("Orchestrator finished");
         }
 
-        public void RegisterScraper(Type scraperClass, string baseUrl)
-        {
-            _scrapers.Add(baseUrl, scraperClass);
-        }
-
         public void RegisterPersister(Type scrapedObjectType, Type persister)
         {
             _persisters.Add(scrapedObjectType, persister);
@@ -90,17 +94,13 @@ namespace ScrapingFramework
                     continue;
                 }
 
-                // Find appropriate scraper
-                var scraperType = _scrapers.FirstOrDefault(s => scrapingRequest.Url.StartsWith(s.Key)).Value;
-                if (scraperType == null)
+                var scraper = _scraperFactory.GetScraperForUrl(scrapingRequest.Url);
+                if (scraper == null)
                 {
                     // No scraper for this URL, add to list of URLs not scraped
                     _logger.LogWarning($"No scraper found for URL {scrapingRequest.Url}");
                     continue;
                 }
-
-                // Create scraper instance
-                var scraper = (IScraper)Activator.CreateInstance(scraperType);
 
                 // Start scraping of URL
                 _logger.LogInformation($"Scraping {scrapingRequest.Url}");

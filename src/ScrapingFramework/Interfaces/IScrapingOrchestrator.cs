@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,17 +11,13 @@ namespace ScrapingFramework.Interfaces
         /// Temporary. TODO: find a better way to start dependant scraping tasks.
         /// </remark>
         IDownloadManager DownloadManager { get; }
+        ILogger<ScrapingOrchestrator> Logger { get; }
 
         /// <summary>
         /// Start scraping.
         /// </summary>
         /// <returns></returns>
         Task Start();
-
-        /// <summary>
-        /// Register a scraper to use when a given URL is matched.
-        /// </summary>
-        void RegisterScraper(Type scraperClass, string baseUrl);
 
         /// <summary>
         /// Register a persister to use when saving scraped results of a given type.
