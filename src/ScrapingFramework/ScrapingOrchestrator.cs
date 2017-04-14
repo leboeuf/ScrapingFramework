@@ -15,7 +15,6 @@ namespace ScrapingFramework
     /// </summary>
     public class ScrapingOrchestrator : IScrapingOrchestrator
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ScrapingOrchestrator> _logger;
         private readonly IDownloadManager _downloadManager;
         private readonly IScraperFactory _scraperFactory;
@@ -53,10 +52,11 @@ namespace ScrapingFramework
         private int _maxRetryCount = 50;
         private int _millisecondsBetweenRetries = 200;
 
-        public ScrapingOrchestrator(ILoggerFactory loggerFactory, IDownloadManager downloadManager)
+        public ScrapingOrchestrator(ILoggerFactory loggerFactory, IDownloadManager downloadManager, IScraperFactory scraperFactory)
         {
             _logger = loggerFactory.CreateLogger<ScrapingOrchestrator>();
             _downloadManager = downloadManager;
+            _scraperFactory = scraperFactory;
         }
 
         public async Task Start()
