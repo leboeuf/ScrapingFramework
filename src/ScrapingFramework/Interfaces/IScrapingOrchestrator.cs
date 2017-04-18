@@ -20,11 +20,6 @@ namespace ScrapingFramework.Interfaces
         Task Start();
 
         /// <summary>
-        /// Register a persister to use when saving scraped results of a given type.
-        /// </summary>
-        void RegisterPersister(Type scrapedObjectType, Type persister);
-
-        /// <summary>
         /// Add an URL to the scraping queue (with optional metadata).
         /// </summary>
         void AddUrlToQueue(string url, Dictionary<string, string> metadata = null);

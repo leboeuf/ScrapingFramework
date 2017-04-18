@@ -72,11 +72,6 @@ namespace ScrapingFramework
             _logger.LogInformation("Orchestrator finished");
         }
 
-        public void RegisterPersister(Type scrapedObjectType, Type persister)
-        {
-            _persisters.Add(scrapedObjectType, persister);
-        }
-
         public void AddUrlToQueue(string url, Dictionary<string, string> metadata = null)
         {
             _scrapingQueue.Enqueue(new ScrapingRequest { Url = url, Metadata = metadata });
