@@ -24,9 +24,7 @@ namespace ScrapingFramework.Factories
         public void RegisterPersister<TScrapedObjectType>(Type persisterType)
         {
             var dependencies = _factoryHelper.GetDependencies(persisterType);
-            
-            var constructedType = persisterType.MakeGenericType(typeof(TScrapedObjectType));
-            var persisterInstance = (IScrapedObjectPersister<TScrapedObjectType>)Activator.CreateInstance(constructedType, dependencies);
+            var persisterInstance = (IScrapedObjectPersister<TScrapedObjectType>)Activator.CreateInstance(persisterType, dependencies);
 
             _persisters.Add(typeof(TScrapedObjectType), persisterInstance);
         }
