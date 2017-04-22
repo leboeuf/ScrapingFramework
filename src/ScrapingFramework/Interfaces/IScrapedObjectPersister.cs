@@ -6,6 +6,6 @@ namespace ScrapingFramework.Interfaces
 
     public interface IScrapedObjectPersister<in T> : IScrapedObjectPersister
     {
-        Task Persist(T scrapedObject);
+        Task<int> Persist(T scrapedObject);
     }
 }

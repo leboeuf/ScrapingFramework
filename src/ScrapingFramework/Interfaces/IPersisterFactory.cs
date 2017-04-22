@@ -13,5 +13,6 @@ namespace ScrapingFramework.Interfaces
         /// Returns the persister instance able to persist the given object type, null if no persister exists.
         /// </summary>
         IScrapedObjectPersister<T> GetPersister<T>();
+        IScrapedObjectPersister GetPersister(Type objectType);
     }
 }

@@ -18,7 +18,7 @@ namespace ScrapingFramework
         private readonly ILogger<ScrapingOrchestrator> _logger;
         private readonly IDownloadManager _downloadManager;
         private readonly IScraperFactory _scraperFactory;
-        private Dictionary<Type, Type> _persisters = new Dictionary<Type, Type>(); // Referenced type must implmement IScrapedObjectPersister
+        private readonly IPersisterFactory _persisterFactory;
 
         // The list of URLs to scrape
         private ConcurrentQueue<ScrapingRequest> _scrapingQueue = new ConcurrentQueue<ScrapingRequest>();
@@ -52,11 +52,12 @@ namespace ScrapingFramework
         private int _maxRetryCount = 50;
         private int _millisecondsBetweenRetries = 200;
 
-        public ScrapingOrchestrator(ILoggerFactory loggerFactory, IDownloadManager downloadManager, IScraperFactory scraperFactory)
+        public ScrapingOrchestrator(ILoggerFactory loggerFactory, IDownloadManager downloadManager, IScraperFactory scraperFactory, IPersisterFactory persisterFactory)
         {
             _logger = loggerFactory.CreateLogger<ScrapingOrchestrator>();
             _downloadManager = downloadManager;
             _scraperFactory = scraperFactory;
+            _persisterFactory = persisterFactory;
         }
 
         public async Task Start()
@@ -153,8 +154,8 @@ namespace ScrapingFramework
             _logger.LogInformation($"Saving scraping results for {scrapingResult.Url}");
 
             // Find appropriate persister
-            var persisterType = _persisters.FirstOrDefault(s => s.Key == scrapingResult.ResultObjectType).Value;
-            if (persisterType == null)
+            var persister = _persisterFactory.GetPersister(scrapingResult.ResultObjectType);
+            if (persister == null)
             {
                 // No persister for this type of scraped object
                 _logger.LogWarning($"No persister found for object {scrapingResult.ResultObjectType}");
@@ -162,8 +163,7 @@ namespace ScrapingFramework
             }
 
             // Use reflection to invoke method with generic parameter
-            var persister = Activator.CreateInstance(persisterType);
-            var method = persisterType.GetMethod("Persist");
+            var method = persister.GetType().GetMethod("Persist");
             await Task.Factory.StartNew(() => method.Invoke(persister, new[] { scrapingResult.ResultObject }));
         }
     }

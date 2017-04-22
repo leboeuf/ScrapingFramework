@@ -33,5 +33,10 @@ namespace ScrapingFramework.Factories
         {
             return (IScrapedObjectPersister<T>) _persisters[typeof(T)];
         }
+
+        public IScrapedObjectPersister GetPersister(Type objectType)
+        {
+            return _persisters[objectType];
+        }
     }
 }
