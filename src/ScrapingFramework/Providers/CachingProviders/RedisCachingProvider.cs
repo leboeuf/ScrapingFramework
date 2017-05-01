@@ -9,7 +9,7 @@ namespace ScrapingFramework.Providers.CachingProviders
     {
         private ConnectionMultiplexer _redis;
 
-        public RedisCachingProvider(string connectionString = "localhost")
+        public RedisCachingProvider(string connectionString = "127.0.0.1")
         {
             _redis = ConnectionMultiplexer.Connect(connectionString);
         }
