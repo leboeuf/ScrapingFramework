@@ -102,26 +102,7 @@ namespace ScrapingFramework
                 _logger.LogInformation($"Scraping {scrapingRequest.Url}");
                 var scrapingTask = new Task(async () =>
                 {
-                    var scrapingResult = await scraper.Scrape(new ScrapingContext
-                    {
-                        ScrapingOrchestrator = this,
-                        ScrapingRequest = scrapingRequest,
-                        Html = await _downloadManager.Download(scrapingRequest.Url, scraper.WebsiteEncoding)
-                    });
-
-                    if (scrapingResult == null)
-                    {
-                        // No response to handle (scraper doesn't return a ScrapingResult)
-                        return;
-                    }
-
-                    if (scrapingResult.Exception != null)
-                    {
-                        _logger.LogError(scrapingResult.Exception.Message, scrapingResult.Exception);
-                        return;
-                    }
-
-                    await SaveScrapingResult(scrapingResult);
+                    await HandleScrapingRequest(scrapingRequest, scraper);
                 });
 
                 _scrapingTasks.Add(scrapingTask);
@@ -132,6 +113,37 @@ namespace ScrapingFramework
             System.Threading.Thread.Sleep(_millisecondsBetweenRetries);
             _retryCount++;
             _logger.LogTrace($"retyCount={_retryCount}");
+        }
+
+        private async Task HandleScrapingRequest(ScrapingRequest scrapingRequest, IScraper scraper)
+        {
+            try
+            {
+                var scrapingResult = await scraper.Scrape(new ScrapingContext
+                {
+                    ScrapingOrchestrator = this,
+                    ScrapingRequest = scrapingRequest,
+                    Html = await _downloadManager.Download(scrapingRequest.Url, scraper.WebsiteEncoding)
+                });
+
+                if (scrapingResult == null)
+                {
+                    // No response to handle (scraper doesn't return a ScrapingResult)
+                    return;
+                }
+
+                if (scrapingResult.Exception != null)
+                {
+                    _logger.LogError(scrapingResult.Exception.Message, scrapingResult.Exception);
+                    return;
+                }
+
+                await SaveScrapingResult(scrapingResult);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"{e.GetType()}: {e.Message}\n{e.StackTrace}", e);
+            }
         }
 
         private bool CanContinue()
