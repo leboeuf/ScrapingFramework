@@ -176,7 +176,12 @@ namespace ScrapingFramework
 
             // Use reflection to invoke method with generic parameter
             var method = persister.GetType().GetMethod("Persist");
-            await Task.Factory.StartNew(() => method.Invoke(persister, new[] { scrapingResult.ResultObject }));
+            var persisterTaskResult = (Task)method.Invoke(persister, new[] { scrapingResult.ResultObject });
+
+            if (persisterTaskResult.Exception?.InnerException != null)
+            {
+                _logger.LogError($"Error occured while persisting URL: {scrapingResult.Url}\n{persisterTaskResult.Exception.InnerException}");
+            }
         }
     }
 }
