@@ -33,13 +33,37 @@ public class MyCustomScrapedObjectType
 ### Example of Scraper
 
 ```
-```
+public class SomePageScraper : IScraper
+{
+    public Encoding WebsiteEncoding => Encoding.GetEncoding("iso-8859-1"); // You can specify the encoding
 
+    public async Task<ScrapingResult> Scrape(ScrapingContext context)
+    {
+        var resultScrapedObject = new MyCustomScrapedObjectType
+        {
+            ScrapingContext = context,
+            ScrapedUrl = context.ScrapingRequest.Url
+        };
+        
+        var document = ScrapingHelper.Parse(context.Html);
+        
+        // Perform data extraction here, possibly using AngleSharp
+        // [...]
+
+        return new ScrapingResult
+        {
+            Url = context.ScrapingRequest.Url,
+            ResultObject = resultScrapedObject,
+            ResultObjectType = typeof(MyCustomScrapedObjectType)
+        };
+    }
+}
+```
 
 ### Example of Persister
 
 ```
-public class EventPersister : IScrapedObjectPersister<MyCustomScrapedObjectType>
+public class MyCustomScrapedObjectTypePersister : IScrapedObjectPersister<MyCustomScrapedObjectType>
 {
     public async Task<int> Persist(MyCustomScrapedObjectType scrapedObject)
     {
@@ -56,9 +80,17 @@ public class EventPersister : IScrapedObjectPersister<MyCustomScrapedObjectType>
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;
-                cmd.CommandText = "";
+                cmd.CommandText = "INSERT INTO sometable (name, description, price, url) VALUES (@name, @description, @price, @url) RETURNING id";
 
-                // ...
+                cmd.Parameters.Add(new NpgsqlParameter("@name", NpgsqlDbType.Varchar));
+                cmd.Parameters.Add(new NpgsqlParameter("@description", NpgsqlDbType.Text));
+                cmd.Parameters.Add(new NpgsqlParameter("@price", NpgsqlDbType.Varchar));
+                cmd.Parameters.Add(new NpgsqlParameter("@url", NpgsqlDbType.Varchar));
+
+                PersisterHelper.SetValue(cmd, 0, scrapedObject.Name);
+                PersisterHelper.SetValue(cmd, 1, scrapedObject.Description);
+                PersisterHelper.SetValue(cmd, 2, scrapedObject.Price);
+                PersisterHelper.SetValue(cmd, 3, scrapedObject.ScrapedUrl);
 
                 return (int)await cmd.ExecuteScalarAsync();
             }
